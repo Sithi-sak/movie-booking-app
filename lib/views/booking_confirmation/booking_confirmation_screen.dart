@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:movie_booking_app/models/movie_model.dart';
 import 'package:movie_booking_app/services/booking_service.dart';
-import 'package:movie_booking_app/views/ticket_history/ticket_history.dart';
 import 'package:movie_booking_app/theme/app_theme.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
@@ -88,10 +87,22 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
       });
       _successController.forward();
     } catch (e) {
+      String errorMessage = 'Booking failed. Please try again.';
+
+      if (e.toString().contains('Seats already booked')) {
+        errorMessage = 'Some selected seats are no longer available. Please go back and select different seats.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Booking failed: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          content: Text(errorMessage),
+          backgroundColor: Colors.orange.shade700,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Back',
+            textColor: Colors.white,
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
       );
     }

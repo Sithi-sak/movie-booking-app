@@ -10,6 +10,7 @@ class BookingService {
 
   final List<TicketModel> _bookedTickets = [];
 
+
   List<TicketModel> get bookedTickets => List.unmodifiable(_bookedTickets);
 
   String addBooking({
@@ -20,6 +21,19 @@ class BookingService {
     required double totalPrice,
     String cinema = 'Cinema Hall 1',
   }) {
+    // Check if any of the selected seats are already booked
+    final bookedSeats = getBookedSeatsForMovieAndShowtime(
+      movie.title,
+      selectedDate,
+      selectedShowtime,
+    );
+
+    final conflictingSeats = selectedSeats.where((seat) => bookedSeats.contains(seat)).toList();
+
+    if (conflictingSeats.isNotEmpty) {
+      throw Exception('Seats already booked: ${conflictingSeats.join(', ')}');
+    }
+
     final ticketId = 'TKT${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
 
     final newTicket = TicketModel(
@@ -69,5 +83,20 @@ class BookingService {
 
   List<TicketModel> getTicketsByStatus(String status) {
     return _bookedTickets.where((ticket) => ticket.status == status).toList();
+  }
+
+  List<String> getBookedSeatsForMovieAndShowtime(String movieTitle, String date, String showtime) {
+    final bookedSeats = <String>[];
+
+    for (final ticket in _bookedTickets) {
+      if (ticket.movieTitle == movieTitle &&
+          ticket.date == date &&
+          ticket.showtime == showtime &&
+          ticket.status == 'confirmed') {
+        bookedSeats.addAll(ticket.seats);
+      }
+    }
+
+    return bookedSeats;
   }
 }

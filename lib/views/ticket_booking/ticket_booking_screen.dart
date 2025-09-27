@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/movie_model.dart';
 import '../booking_confirmation/booking_confirmation_screen.dart';
 import '../../theme/app_theme.dart';
+import '../../services/booking_service.dart';
 
 class TicketBookingScreen extends StatefulWidget {
   final MovieModel movie;
@@ -52,7 +53,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
     ['F1', 'F2', 'F3', 'F4', '', 'F5', 'F6', 'F7', 'F8'],
   ];
 
-  final List<String> bookedSeats = ['A1', 'A5', 'B3', 'C7', 'D2', 'E6'];
+  List<String> bookedSeats = [];
 
   final List<String> stepTitles = [
     'Date & Time',
@@ -94,6 +95,9 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
     );
 
     _animationController.forward();
+
+    // Load booked seats for the initially selected showtime
+    _updateBookedSeats();
   }
 
   @override
@@ -130,8 +134,18 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
   }
 
   void _selectSeat(String seatNumber) {
-    if (bookedSeats.contains(seatNumber) || seatNumber.isEmpty) {
+    if (seatNumber.isEmpty) return;
+
+    if (bookedSeats.contains(seatNumber)) {
+      // Show feedback that seat is already booked
       HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Seat $seatNumber is already booked by another user'),
+          backgroundColor: Colors.orange.shade700,
+          duration: const Duration(seconds: 2),
+        ),
+      );
       return;
     }
 
@@ -151,9 +165,21 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
     HapticFeedback.selectionClick();
   }
 
+  void _updateBookedSeats() {
+    if (selectedDate.isNotEmpty && selectedShowtime.isNotEmpty) {
+      setState(() {
+        bookedSeats = BookingService().getBookedSeatsForMovieAndShowtime(
+          widget.movie.title,
+          selectedDate,
+          selectedShowtime,
+        );
+      });
+    }
+  }
+
   Color _getSeatColor(String seatNumber) {
     if (seatNumber.isEmpty) return Colors.transparent;
-    if (bookedSeats.contains(seatNumber)) return Colors.grey.shade600;
+    if (bookedSeats.contains(seatNumber)) return Colors.red.shade300;
     if (selectedSeatNumbers.contains(seatNumber)) return AppTheme.primaryRed;
     return AppTheme.surfaceDark;
   }
@@ -620,6 +646,8 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
           selectedDate = date;
           // Clear selected showtime when date changes
           selectedShowtime = '';
+          selectedSeatNumbers.clear();
+          totalPrice = 0.0;
         });
         HapticFeedback.selectionClick();
       },
@@ -667,7 +695,10 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
       onTap: () {
         setState(() {
           selectedShowtime = time;
+          selectedSeatNumbers.clear();
+          totalPrice = 0.0;
         });
+        _updateBookedSeats();
         HapticFeedback.selectionClick();
       },
       child: AnimatedContainer(
@@ -753,7 +784,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected ? AppTheme.primaryRed :
-                     isBooked ? Colors.grey.shade600 : AppTheme.borderDark,
+                     isBooked ? Colors.red.shade400 : AppTheme.borderDark,
               width: isSelected ? 2 : 1,
             ),
             boxShadow: isSelected ? [
@@ -762,18 +793,29 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
+            ] : isBooked ? [
+              BoxShadow(
+                color: Colors.red.withValues(alpha: 0.3),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
             ] : null,
           ),
           child: Center(
-            child: Text(
-              seatNumber,
-              style: TextStyle(
-                color: isBooked ? Colors.white38 :
-                       isSelected ? Colors.white : AppTheme.textSecondary,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
+            child: isBooked ?
+              Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 16,
+              ) :
+              Text(
+                seatNumber,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppTheme.textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
           ),
         ),
       ),
@@ -792,7 +834,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
         children: [
           _buildLegendItem('Available', AppTheme.surfaceDark),
           _buildLegendItem('Selected', AppTheme.primaryRed),
-          _buildLegendItem('Booked', Colors.grey.shade600),
+          _buildLegendItem('Booked', Colors.red.shade300),
         ],
       ),
     );
