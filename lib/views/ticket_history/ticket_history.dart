@@ -69,7 +69,10 @@ class _TicketHistoryState extends State<TicketHistory> {
                   itemCount: tickets.length,
                   itemBuilder: (context, index) {
                     final ticket = tickets[index];
-                    return _buildEnhancedTicket(ticket, index);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom:  50.0),
+                      child: _buildEnhancedTicket(ticket, index),
+                    );
                   },
                 ),
               ),
@@ -111,6 +114,7 @@ class _TicketHistoryState extends State<TicketHistory> {
               // Header with movie info
               Container(
                 padding: const EdgeInsets.all(20),
+
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
