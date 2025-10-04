@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:movie_booking_app/theme/app_theme.dart';
-import 'package:movie_booking_app/views/screen_control/screen_controller.dart';
+import 'package:movie_booking_app/core/theme/app_theme.dart';
+import 'package:movie_booking_app/presentation/auth/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,10 +13,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Movie App',
+      title: 'SabayBook',
       theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
-      home: const ScreenController(),
+      home: const SplashScreen(),
     );
   }
 }

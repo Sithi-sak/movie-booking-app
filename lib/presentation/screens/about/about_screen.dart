@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:movie_booking_app/core/theme/app_theme.dart';
 import 'package:movie_booking_app/data/developer_data.dart';
-import 'package:movie_booking_app/models/developer_model.dart';
-import 'package:movie_booking_app/theme/app_theme.dart';
+import 'package:movie_booking_app/data/models/developer_model.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});

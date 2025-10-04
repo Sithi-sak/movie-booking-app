@@ -1,7 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:movie_booking_app/models/movie_model.dart';
-import 'package:movie_booking_app/views/movie_detail/movie_detail_screen.dart';
+import 'package:movie_booking_app/data/models/movie_model.dart';
+import 'package:movie_booking_app/presentation/screens/movie_detail/movie_detail_screen.dart';
 
 class MovieCarousel extends StatefulWidget {
   final List<MovieModel> movies;
@@ -83,7 +83,7 @@ class _MovieCarouselState extends State<MovieCarousel> {
                             ),
                           ),
                           Image.network(
-                            movie.posterUrl,
+                            movie.posterUrl ?? '',
                             width: double.infinity,
                             height: double.infinity,
                             fit: BoxFit.cover,
@@ -162,7 +162,7 @@ class _MovieCarouselState extends State<MovieCarousel> {
                                     ),
                                     SizedBox(height: 8),
                                     Text(
-                                      movie.genre.split(',').first,
+                                      movie.genre?.split(',').first ?? 'Unknown',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: Colors.white.withValues(alpha:0.8),
@@ -332,7 +332,7 @@ class _MovieCarouselState extends State<MovieCarousel> {
                                       ),
                                     ),
                                     child: Text(
-                                      movie.genre.split(',').first.trim(),
+                                      movie.genre?.split(',').first.trim() ?? 'Unknown',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
@@ -372,7 +372,7 @@ class _MovieCarouselState extends State<MovieCarousel> {
                                             ),
                                             SizedBox(width: 4),
                                             Text(
-                                              movie.rating.toString(),
+                                              movie.score?.toStringAsFixed(1) ?? movie.rating ?? 'N/A',
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 14,
@@ -390,7 +390,7 @@ class _MovieCarouselState extends State<MovieCarousel> {
                                       ),
                                       SizedBox(width: 4),
                                       Text(
-                                        '${movie.duration}m',
+                                        '${movie.duration ?? 0}m',
                                         style: TextStyle(
                                           color: Colors.white.withValues(alpha: 0.8),
                                           fontSize: 14,

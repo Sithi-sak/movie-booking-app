@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:movie_booking_app/views/about_us/about_us_screen.dart';
-import 'package:movie_booking_app/views/home/home_screen.dart';
-import 'package:movie_booking_app/views/profile/profile_screen.dart';
-import 'package:movie_booking_app/theme/app_theme.dart';
-import 'package:movie_booking_app/views/ticket_history/ticket_history.dart';
+import 'package:movie_booking_app/core/theme/app_theme.dart';
+import 'package:movie_booking_app/presentation/screens/about/about_screen.dart';
+import 'package:movie_booking_app/presentation/screens/home/home_screen.dart';
+import 'package:movie_booking_app/presentation/screens/profile/profile_screen.dart';
+import 'package:movie_booking_app/presentation/screens/profile/ticket_history_screen.dart';
 
 class ScreenController extends StatefulWidget {
   const ScreenController({super.key});
@@ -29,7 +29,7 @@ class _ScreenControllerState extends State<ScreenController> {
   ];
 
   List<String> screenTitles = [
-    "CineMax",
+    "SabayBook",
     "Ticket History",
     "About Us",
     "Profile",

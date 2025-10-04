@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:movie_booking_app/models/movie_model.dart';
+import 'package:movie_booking_app/core/theme/app_theme.dart';
+import 'package:movie_booking_app/data/models/movie_model.dart';
 import 'package:movie_booking_app/services/booking_service.dart';
-import 'package:movie_booking_app/theme/app_theme.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   final MovieModel movie;
@@ -267,11 +267,17 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                                 height: 120,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
-                                  image: DecorationImage(
-                                    image: NetworkImage(widget.movie.posterUrl),
+                                  color: AppTheme.surfaceDark,
+                                  image: widget.movie.posterUrl != null ? DecorationImage(
+                                    image: NetworkImage(widget.movie.posterUrl!),
                                     fit: BoxFit.cover,
-                                  ),
+                                  ) : null,
                                 ),
+                                child: widget.movie.posterUrl == null ? Icon(
+                                  Icons.movie,
+                                  color: Colors.white54,
+                                  size: 40,
+                                ) : null,
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -288,7 +294,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      widget.movie.genre.split(',').first,
+                                      widget.movie.genre?.split(',').first ?? 'Unknown',
                                       style: TextStyle(
                                         color: Colors.white.withValues(alpha:0.7),
                                         fontSize: 14,
@@ -304,7 +310,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          widget.movie.rating.toString(),
+                                          widget.movie.score?.toStringAsFixed(1) ?? widget.movie.rating ?? 'N/A',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 14,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../models/movie_model.dart';
-import '../booking_confirmation/booking_confirmation_screen.dart';
-import '../../theme/app_theme.dart';
-import '../../services/booking_service.dart';
+import 'package:movie_booking_app/core/theme/app_theme.dart';
+import 'package:movie_booking_app/data/models/movie_model.dart';
+import 'package:movie_booking_app/presentation/screens/booking/booking_confirmation_screen.dart';
+import 'package:movie_booking_app/services/booking_service.dart';
 
 class TicketBookingScreen extends StatefulWidget {
   final MovieModel movie;
@@ -407,9 +407,9 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
-                    itemCount: widget.movie.showtimes.length,
+                    itemCount: widget.movie.showtimes?.length ?? 0,
                     itemBuilder: (context, index) {
-                      return _buildEnhancedTimeButton(widget.movie.showtimes[index]);
+                      return _buildEnhancedTimeButton(widget.movie.showtimes![index]);
                     },
                   ),
                 ),
@@ -578,7 +578,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                widget.movie.posterUrl,
+                widget.movie.posterUrl ?? '',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -609,7 +609,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  widget.movie.genre.split(',').first,
+                  widget.movie.genre?.split(',').first ?? 'Unknown',
                   style: TextStyle(
                     color: AppTheme.textSecondary,
                     fontSize: 14,
@@ -621,7 +621,7 @@ class _TicketBookingScreenState extends State<TicketBookingScreen>
                     Icon(Icons.star, color: Colors.amber, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      widget.movie.rating.toString(),
+                      widget.movie.score?.toStringAsFixed(1) ?? widget.movie.rating ?? 'N/A',
                       style: TextStyle(
                         color: AppTheme.textPrimary,
                         fontSize: 14,

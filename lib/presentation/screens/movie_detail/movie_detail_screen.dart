@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:movie_booking_app/models/movie_model.dart';
-import 'package:movie_booking_app/views/ticket_booking/ticket_booking_screen.dart';
-import 'package:movie_booking_app/views/trailer/trailer_screen.dart';
-import 'package:movie_booking_app/theme/app_theme.dart';
+import 'package:movie_booking_app/core/theme/app_theme.dart';
+import 'package:movie_booking_app/data/models/movie_model.dart';
+import 'package:movie_booking_app/presentation/screens/booking/ticket_booking_screen.dart';
+import 'package:movie_booking_app/presentation/screens/trailer/trailer_screen.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final MovieModel movie;
@@ -49,11 +49,21 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
   }
 
   void _watchTrailer() {
+    if (widget.movie.trailerUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Trailer not available for this movie'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => TrailerScreen(
-          trailerUrl: widget.movie.trailerUrl,
+          trailerUrl: widget.movie.trailerUrl!,
           movieTitle: widget.movie.title,
         ),
       ),
@@ -91,7 +101,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    widget.movie.backdropUrl,
+                    widget.movie.backdropUrl ?? '',
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
@@ -182,7 +192,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(16),
                             child: Image.network(
-                              widget.movie.posterUrl,
+                              widget.movie.posterUrl ?? '',
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
@@ -221,7 +231,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    widget.movie.rating.toString(),
+                                    widget.movie.score?.toStringAsFixed(1) ?? widget.movie.rating ?? 'N/A',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -232,7 +242,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                widget.movie.genre.split(',').first,
+                                widget.movie.genre?.split(',').first ?? 'Unknown',
                                 style: TextStyle(
                                   color: AppTheme.primaryRed,
                                   fontSize: 14,
@@ -241,7 +251,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${_formatDuration(widget.movie.duration)} • ${widget.movie.language}',
+                                '${widget.movie.duration != null ? _formatDuration(widget.movie.duration!) : 'N/A'} • ${widget.movie.language ?? 'N/A'}',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 14,
@@ -277,7 +287,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            widget.movie.description,
+                            widget.movie.description ?? 'No description available.',
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 15,
@@ -341,7 +351,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                             ),
                           ),
                           child: Text(
-                            widget.movie.director,
+                            widget.movie.director ?? 'Unknown',
                             style: TextStyle(
                               color: AppTheme.primaryRed,
                               fontSize: 16,
@@ -365,7 +375,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: widget.movie.cast.map((actor) {
+                          children: (widget.movie.cast ?? []).map((actor) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -402,7 +412,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                         Wrap(
                           spacing: 12,
                           runSpacing: 8,
-                          children: widget.movie.showtimes.map((time) {
+                          children: (widget.movie.showtimes ?? []).map((time) {
                             return InkWell(
                               onTap: () {
                                 Navigator.push(
@@ -447,18 +457,18 @@ class _MovieDetailScreenState extends State<MovieDetailScreen>
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: () {
+                            onPressed: (widget.movie.showtimes?.isNotEmpty ?? false) ? () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => TicketBookingScreen(
                                     movie: widget.movie,
                                     selectedShowtime:
-                                        widget.movie.showtimes.first,
+                                        widget.movie.showtimes!.first,
                                   ),
                                 ),
                               );
-                            },
+                            } : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryRed,
                               foregroundColor: Colors.white,

@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:movie_booking_app/core/theme/app_theme.dart';
+import 'package:movie_booking_app/data/models/ticket_model.dart';
 import 'package:movie_booking_app/services/booking_service.dart';
-import 'package:movie_booking_app/models/ticket_model.dart';
-import 'package:movie_booking_app/theme/app_theme.dart';
 
 class TicketHistory extends StatefulWidget {
   const TicketHistory({super.key});

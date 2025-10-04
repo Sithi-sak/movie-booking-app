@@ -1,7 +1,6 @@
 
-
-import 'package:movie_booking_app/models/movie_model.dart';
-import 'package:movie_booking_app/models/ticket_model.dart';
+import 'package:movie_booking_app/data/models/movie_model.dart';
+import 'package:movie_booking_app/data/models/ticket_model.dart';
 
 class BookingService {
   static final BookingService _instance = BookingService._internal();
@@ -39,7 +38,7 @@ class BookingService {
     final newTicket = TicketModel(
       id: ticketId,
       movieTitle: movie.title,
-      moviePoster: movie.posterUrl,
+      moviePoster: movie.posterUrl ?? '',
       date: selectedDate,
       showtime: selectedShowtime,
       seats: selectedSeats,

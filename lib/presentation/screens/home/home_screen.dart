@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:movie_booking_app/data/movie_data.dart';
-import 'package:movie_booking_app/models/movie_model.dart';
-import 'package:movie_booking_app/views/home/widgets/movie_carousel.dart';
-import 'package:movie_booking_app/views/movie_detail/movie_detail_screen.dart';
+import 'package:movie_booking_app/data/models/movie_model.dart';
+import 'package:movie_booking_app/services/movie_service.dart';
+import 'package:movie_booking_app/presentation/screens/home/widgets/movie_carousel.dart';
+import 'package:movie_booking_app/presentation/screens/movie_detail/movie_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,28 +20,66 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _debounceTimer;
   TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _carouselMovies = MovieData.sampleMovies.take(5).toList();
-    _updateFilteredMovies();
+    _loadMovies();
   }
 
-  void _updateFilteredMovies() {
+  Future<void> _loadMovies() async {
     setState(() {
-      if (selectedFilter == "Streaming Now") {
-        _filteredMovies = MovieData.sampleMovies
-            .where((movie) => movie.status == MovieStatus.streamingNow)
-            .toList();
-      } else if (selectedFilter == "Coming Soon") {
-        _filteredMovies = MovieData.sampleMovies
-            .where((movie) => movie.status == MovieStatus.comingSoon)
-            .toList();
-      } else {
-        _filteredMovies = MovieData.sampleMovies;
-      }
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      // Fetch all movies from backend
+      final allMovies = await MovieService.getAllMovies();
+
+      setState(() {
+        // Take first 5 for carousel
+        _carouselMovies = allMovies.take(5).toList();
+        _isLoading = false;
+      });
+
+      // Update filtered movies based on current filter
+      _updateFilteredMovies();
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateFilteredMovies() async {
+    try {
+      List<MovieModel> movies;
+
+      if (selectedFilter == "Streaming Now") {
+        movies = await MovieService.getStreamingNowMovies();
+      } else if (selectedFilter == "Coming Soon") {
+        movies = await MovieService.getComingSoonMovies();
+      } else {
+        movies = await MovieService.getAllMovies();
+      }
+
+      setState(() {
+        _filteredMovies = movies;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load movies: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _searchMovies(String query) {
@@ -56,21 +94,25 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    _debounceTimer = Timer(Duration(milliseconds: 300), () {
-      setState(() {
-        _isSearching = true;
-        _searchResults = MovieData.sampleMovies
-            .where((movie) =>
-                movie.title.toLowerCase().contains(query.toLowerCase()) ||
-                movie.genre.toLowerCase().contains(query.toLowerCase()) ||
-                movie.director.toLowerCase().contains(query.toLowerCase()) ||
-                movie.cast.any((actor) =>
-                    actor.toLowerCase().contains(query.toLowerCase())))
-            .toList();
-      });
+    _debounceTimer = Timer(Duration(milliseconds: 300), () async {
+      try {
+        final movies = await MovieService.getAllMovies(search: query);
+        setState(() {
+          _isSearching = true;
+          _searchResults = movies;
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Search failed: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     });
   }
-
 
   @override
   void dispose() {
@@ -81,6 +123,98 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading indicator
+    if (_isLoading) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFF212121).withValues(alpha: 0.8),
+                const Color(0xFF212121).withValues(alpha: 0.9),
+                const Color(0xFF212121),
+              ],
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  color: Color(0xFFE50914),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Loading movies...',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Show error message
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFF212121).withValues(alpha: 0.8),
+                const Color(0xFF212121).withValues(alpha: 0.9),
+                const Color(0xFF212121),
+              ],
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 64,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Failed to load movies',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                ),
+                SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _loadMovies,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFE50914),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  ),
+                  child: Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Container(
         height: double.infinity,
@@ -136,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 20),
               // Show carousel only when not searching
-              if (!_isSearching) ...[
+              if (!_isSearching && _carouselMovies.isNotEmpty) ...[
                 MovieCarousel(movies: _carouselMovies),
                 SizedBox(height: 30),
               ],
@@ -327,7 +461,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // Movie poster
               Image.network(
-                movie.posterUrl,
+                movie.posterUrl ?? '',
                 width: double.infinity,
                 height: double.infinity,
                 fit: BoxFit.cover,
@@ -457,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icon(Icons.star, color: Colors.amber, size: 14),
                           SizedBox(width: 4),
                           Text(
-                            movie.rating.toString(),
+                            (movie.score ?? 0.0).toStringAsFixed(1),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -465,14 +599,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           Spacer(),
-                          Text(
-                            '\$${movie.price}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                          if (movie.price > 0)
+                            Text(
+                              '\$${movie.price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ],

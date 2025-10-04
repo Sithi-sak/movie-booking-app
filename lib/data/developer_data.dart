@@ -1,4 +1,5 @@
-import 'package:movie_booking_app/models/developer_model.dart';
+
+import 'package:movie_booking_app/data/models/developer_model.dart';
 
 class DeveloperData {
   static List<DeveloperModel> teamMembers = [
